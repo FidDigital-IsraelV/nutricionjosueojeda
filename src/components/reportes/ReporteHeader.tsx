@@ -14,7 +14,7 @@ const ReporteHeader: React.FC<ReporteHeaderProps> = ({ title, subtitle }) => {
     <div className="mb-8 flex flex-col items-center justify-center text-center">
       <div className="mb-4 flex justify-center">
         <img 
-          src="/public/lovable-uploads/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
+          src="/images/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
           alt="THREEPERCENT Logo" 
           className="h-16 object-contain"
         />

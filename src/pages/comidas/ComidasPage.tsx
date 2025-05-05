@@ -159,7 +159,7 @@ const ComidasPage = () => {
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <img
-                        src="/public/lovable-uploads/b2500693-c261-4fb7-9105-1420fc4b4664.png"
+                        src="/images/b2500693-c261-4fb7-9105-1420fc4b4664.png"
                         alt="Logo Sistema de Nutrición"
                         className="w-24 h-24 object-contain"
                       />
