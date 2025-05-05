@@ -1,0 +1,106 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary color - Negro para THREEPERCENT */
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary color - Amarillo dorado para THREEPERCENT */
+    --secondary: 50 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* Accent color - Dorado más intenso */
+    --accent: 43 74% 49%;
+    --accent-foreground: 0 0% 0%;
+
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 50 100% 50%; /* Gold ring */
+
+    --radius: 0.75rem;
+
+    /* Sidebar específico */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 50 100% 50%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 43 74% 49%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 50 100% 50%;
+  }
+
+  .dark {
+    /* Primary color - Invertido para dark mode */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Secondary color - Mantener color dorado */
+    --secondary: 50 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* Accent color - Dorado más intenso */
+    --accent: 43 74% 49%;
+    --accent-foreground: 0 0% 0%;
+
+    /* Base colors para dark mode */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 50 100% 50%;
+
+    /* Sidebar específico para dark mode */
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 50 100% 50%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 43 74% 49%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 50 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
