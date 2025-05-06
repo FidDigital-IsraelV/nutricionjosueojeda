@@ -112,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Cambio en el estado de autenticación:', _event);
       if (session?.user) {
         const profile = await getProfile(session.user.id);
         if (profile) {
@@ -132,7 +133,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -179,11 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Primero limpiar el estado local
-      setCurrentUser(null);
       setIsLoading(true);
-
-      // Luego cerrar sesión en Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -192,9 +191,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      setCurrentUser(null);
       toast.info("Has cerrado sesión correctamente");
-      // Recargar la página después de cerrar sesión
-      window.location.reload();
     } catch (error) {
       console.error("Error inesperado al cerrar sesión:", error);
       toast.error("Error al cerrar sesión");

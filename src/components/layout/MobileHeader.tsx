@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BellRing, PieChart, User, LogOut } from "lucide-react";
@@ -36,7 +35,7 @@ const MobileHeader = ({
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center">
           <img 
-            src="/images/b2500693-c261-4fb7-9105-1420fc4b4664.png"
+            src="/src/images/b2500693-c261-4fb7-9105-1420fc4b4664.png"
             alt="THREEPERCENT Logo"
             className="h-8 object-contain" 
           />

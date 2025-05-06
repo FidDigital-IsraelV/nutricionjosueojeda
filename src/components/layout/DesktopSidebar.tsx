@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { PieChart, BellRing, User } from "lucide-react";
@@ -31,7 +30,7 @@ const DesktopSidebar = ({
         <div className="p-5 border-b border-border">
           <div className="flex items-center justify-center">
             <img 
-              src="/images/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
+              src="/src/images/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
               alt="THREEPERCENT Logo" 
               className="h-12 object-contain"
             />

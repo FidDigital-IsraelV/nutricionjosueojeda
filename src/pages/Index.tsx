@@ -30,7 +30,7 @@ const Index = () => {
       <header className="bg-gradient-to-b from-primary/10 to-background py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
           <img 
-            src="/images/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
+            src="/src/images/b2500693-c261-4fb7-9105-1420fc4b4664.png" 
             alt="Josue Ojeda Nutricionista Logo" 
             className="h-26 mx-auto mb-4 object-contain"
           />
