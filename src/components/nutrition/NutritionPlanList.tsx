@@ -22,9 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Calendar, Edit, Trash, FileDown, Eye } from "lucide-react";
-import { exportToPDF } from "@/utils/pdfExport";
-import { toast } from "sonner";
+import { Calendar, Edit, Trash, Eye } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface NutritionPlanListProps {
@@ -48,9 +46,7 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
   const { clients, foods, supplements, profiles } = useData();
   const { meals, loading: mealsLoading } = useMeals();
   const planRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const detailedPlanRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [viewingPlan, setViewingPlan] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const calculateDayTotal = (dayPlan: DailyPlan, nutrient: 'calories' | 'protein' | 'carbs' | 'fat') => {
     if (!dayPlan || !dayPlan.meals) return 0;
@@ -123,128 +119,41 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
     setViewingPlan(null);
   };
 
-  const handleExportPlanToPDF = async (planId: string) => {
-    const planRef = detailedPlanRefs.current[planId];
-    if (!planRef) {
-      toast.error("No se pudo encontrar el plan para exportar");
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      toast.info("Generando PDF del plan nutricional...");
-      
-      const plan = plans.find(p => p.id === planId);
-      const clientName = plan ? getClientName(plan.clientId).replace(/\s+/g, '_') : 'Cliente';
-      const filename = `Plan_Nutricional_${clientName}`;
-      
-      // Crear un contenedor temporal
-      const tempDiv = document.createElement('div');
-      tempDiv.className = "pdf-export-container";
-      tempDiv.style.width = "1000px";
-      tempDiv.style.backgroundColor = "#ffffff";
-      tempDiv.style.padding = "40px";
-      tempDiv.style.fontFamily = "Arial, sans-serif";
-      tempDiv.style.lineHeight = "1.5";
-      tempDiv.style.color = "#333333";
-      
-      // Clonar el contenido del plan con mejoras visuales
-      const planContent = planRef.cloneNode(true) as HTMLElement;
-      
-      // Limpiar el contenido duplicado
-      const existingContent = planContent.querySelector('.pdf-export-container');
-      if (existingContent) {
-        existingContent.remove();
-      }
-      
-      // Mejorar los estilos de las secciones
-      const sections = planContent.querySelectorAll('div > div');
-      sections.forEach(section => {
-        const sectionElement = section as HTMLElement;
-        sectionElement.style.marginBottom = '24px';
-        sectionElement.style.padding = '16px';
-        sectionElement.style.borderRadius = '8px';
-        sectionElement.style.backgroundColor = '#f9fafb';
-      });
-      
-      // Mejorar los títulos
-      const titles = planContent.querySelectorAll('h2, h3');
-      titles.forEach(title => {
-        const titleElement = title as HTMLElement;
-        titleElement.style.fontWeight = 'bold';
-        titleElement.style.marginBottom = '16px';
-        titleElement.style.color = '#1a1a1a';
-        titleElement.style.borderBottom = '2px solid #e5e7eb';
-        titleElement.style.paddingBottom = '8px';
-      });
-      
-      // Mejorar las tablas
-      const tables = planContent.querySelectorAll('table');
-      tables.forEach(table => {
-        const tableElement = table as HTMLElement;
-        tableElement.style.width = '100%';
-        tableElement.style.borderCollapse = 'collapse';
-        tableElement.style.marginBottom = '16px';
-        
-        const ths = table.querySelectorAll('th');
-        ths.forEach(th => {
-          const thElement = th as HTMLElement;
-          thElement.style.backgroundColor = '#f3f4f6';
-          thElement.style.padding = '8px';
-          thElement.style.textAlign = 'left';
-          thElement.style.borderBottom = '2px solid #e5e7eb';
-        });
-        
-        const tds = table.querySelectorAll('td');
-        tds.forEach(td => {
-          const tdElement = td as HTMLElement;
-          tdElement.style.padding = '8px';
-          tdElement.style.borderBottom = '1px solid #e5e7eb';
-        });
-      });
-      
-      // Mejorar las tarjetas
-      const cards = planContent.querySelectorAll('.card');
-      cards.forEach(card => {
-        const cardElement = card as HTMLElement;
-        cardElement.style.border = '1px solid #e5e7eb';
-        cardElement.style.borderRadius = '8px';
-        cardElement.style.padding = '16px';
-        cardElement.style.marginBottom = '16px';
-        cardElement.style.backgroundColor = '#ffffff';
-      });
-      
-      // Mejorar los badges
-      const badges = planContent.querySelectorAll('.badge');
-      badges.forEach(badge => {
-        const badgeElement = badge as HTMLElement;
-        badgeElement.style.padding = '4px 8px';
-        badgeElement.style.borderRadius = '4px';
-        badgeElement.style.fontSize = '12px';
-        badgeElement.style.fontWeight = '500';
-      });
-      
-      // Agregar el contenido al contenedor temporal
-      tempDiv.appendChild(planContent);
-      
-      // Agregar el contenedor temporal al documento
-      document.body.appendChild(tempDiv);
-      
-      // Exportar a PDF
-      await exportToPDF(tempDiv, filename);
-      
-      // Limpiar
-      document.body.removeChild(tempDiv);
-    } catch (error) {
-      console.error("Error al generar PDF:", error);
-      toast.error(`Error al generar el PDF: ${error.message || 'Error desconocido'}`);
-    } finally {
-      setIsLoading(false);
+  const getMealDetails = (mealId: string) => {
+    return meals.find(meal => meal.id === mealId);
+  };
+
+  // Función para traducir el tipo de comida al español
+  const traducirTipoComida = (tipo: string) => {
+    switch (tipo) {
+      case 'breakfast':
+        return 'Desayuno';
+      case 'lunch':
+        return 'Almuerzo';
+      case 'dinner':
+        return 'Complementos';
+      case 'snack':
+        return 'Merienda';
+      default:
+        return tipo;
     }
   };
 
-  const getMealDetails = (mealId: string) => {
-    return meals.find(meal => meal.id === mealId);
+  // Función para obtener la hora por defecto según el tipo de comida
+  const obtenerHoraPorDefecto = (tipo: string, hora?: string) => {
+    if (hora) return hora;
+    switch (tipo) {
+      case 'breakfast':
+        return '8:00 am';
+      case 'lunch':
+        return '1:00 pm';
+      case 'snack':
+        return '7:00 pm';
+      case 'dinner':
+        return 'Sin hora especificada';
+      default:
+        return 'Sin hora especificada';
+    }
   };
 
   if (plans.length === 0) {
@@ -263,7 +172,7 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
   const currentViewingPlan = plans.find(plan => plan.id === viewingPlan);
 
   return (
-    <div>
+    <div className="print-area">
       <div style={{ display: 'none' }}>
         {plans.map((plan) => {
           const client = clients.find(c => c.id === plan.clientId);
@@ -271,7 +180,7 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
           return (
             <div 
               key={`detailed-${plan.id}`}
-              ref={el => detailedPlanRefs.current[plan.id] = el}
+              ref={el => planRefs.current[plan.id] = el}
               className="bg-white p-8"
               style={{ width: '1000px', padding: '40px' }}
             >
@@ -409,27 +318,6 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
                   <div key={dayIndex} className="mb-6 pb-4 border-b last:border-b-0">
                     <h3 className="font-bold text-lg mb-3">Día {dayIndex + 1}</h3>
                     
-                    {dayPlan.totalCalories && (
-                      <div className="grid grid-cols-4 gap-2 mb-3 text-sm">
-                        <div>
-                          <span className="font-semibold">Calorías: </span>
-                          {dayPlan.totalCalories || calculateDayTotal(dayPlan, 'calories')} kcal
-                        </div>
-                        <div>
-                          <span className="font-semibold">Proteínas: </span>
-                          {dayPlan.totalProtein || calculateDayTotal(dayPlan, 'protein')} g
-                        </div>
-                        <div>
-                          <span className="font-semibold">Carbohidratos: </span>
-                          {dayPlan.totalCarbs || calculateDayTotal(dayPlan, 'carbs')} g
-                        </div>
-                        <div>
-                          <span className="font-semibold">Grasas: </span>
-                          {dayPlan.totalFat || calculateDayTotal(dayPlan, 'fat')} g
-                        </div>
-                      </div>
-                    )}
-                    
                     <div className="space-y-4">
                       {dayPlan.meals?.map((meal, mealIndex) => {
                         const mealDetails = getMealDetails(meal.meal_id || '');
@@ -438,59 +326,56 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
                         return (
                           <Card key={mealIndex} className="mb-4">
                             <CardHeader>
-                              <CardTitle>{mealDetails.type || `Comida ${mealIndex + 1}`}</CardTitle>
-                              <CardDescription>{mealDetails.time || 'Sin hora especificada'}</CardDescription>
+                              <CardTitle>{traducirTipoComida(mealDetails.type) || `Comida ${mealIndex + 1}`}</CardTitle>
+                              <CardDescription>{obtenerHoraPorDefecto(mealDetails.type, mealDetails.time)}</CardDescription>
                             </CardHeader>
                             <CardContent>
                               <div className="grid gap-4">
-                                {mealDetails.foods?.map((food, foodIndex) => {
+                                {mealDetails.foods?.filter(food => {
                                   const foodData = foods.find(f => f.id === food.food_id);
-                                  console.log('Datos del alimento:', {
-                                    food,
-                                    foodId: food.food_id,
-                                    name: foodData?.name,
-                                    quantity: food.quantity,
-                                    unit: food.unit,
-                                    calories: food.calories,
-                                    image: foodData?.image_url
-                                  });
+                                  return !!foodData;
+                                }).map((food, foodIndex) => {
+                                  const foodData = foods.find(f => f.id === food.food_id);
                                   return (
-                                    <div key={foodIndex} className="flex items-center gap-2">
-                                      <Avatar className="h-8 w-8">
-                                        <AvatarImage src={foodData?.image_url} alt={foodData?.name || 'Alimento'} />
-                                        <AvatarFallback>{foodData?.name?.charAt(0) || 'A'}</AvatarFallback>
-                                      </Avatar>
+                                    <div key={foodIndex} className="flex justify-between items-center gap-4 mb-4">
                                       <div>
-                                        <p className="font-medium">{foodData?.name || 'Alimento'}</p>
+                                        <p className="text-lg font-semibold">{foodData?.name || 'Alimento'}</p>
                                         <p className="text-sm text-muted-foreground">
-                                          {food.quantity ? `${food.quantity} ${food.unit}` : foodData?.servingUnit} - {food.calories} kcal
+                                          {food.quantity ? `${food.quantity} ${food.unit}` : foodData?.servingUnit}
                                         </p>
                                       </div>
+                                      {foodData?.image_url && (
+                                        <img
+                                          src={foodData.image_url}
+                                          alt={foodData.name || 'Alimento'}
+                                          className="w-64 h-40 object-cover rounded-lg flex-shrink-0"
+                                        />
+                                      )}
                                     </div>
                                   );
                                 })}
                                 {mealDetails.instructions && (
                                   <div>
                                     <h4 className="font-medium mb-2">Instrucciones de preparación</h4>
-                                    <p className="text-sm text-muted-foreground">{mealDetails.instructions}</p>
+                                    <p className="text-xl text-muted-foreground">{mealDetails.instructions}</p>
                                   </div>
                                 )}
                                 {mealDetails.notes && (
                                   <div>
                                     <h4 className="font-medium mb-2">Notas</h4>
-                                    <p className="text-sm text-muted-foreground">{mealDetails.notes}</p>
+                                    <p className="text-xl text-muted-foreground">{mealDetails.notes}</p>
                                   </div>
                                 )}
                                 {mealDetails.images && mealDetails.images.length > 0 && (
                                   <div>
                                     <h4 className="font-medium mb-2">Fotos</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       {mealDetails.images.map((image, imageIndex) => (
                                         <img
                                           key={imageIndex}
                                           src={image}
                                           alt={`Foto ${imageIndex + 1} de ${mealDetails.type || 'comida'}`}
-                                          className="rounded-lg object-cover h-32 w-full"
+                                          className="rounded-lg object-cover aspect-square w-full h-64"
                                         />
                                       ))}
                                     </div>
@@ -556,258 +441,157 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
           </DialogHeader>
           
           {currentViewingPlan && (
-            <div className="mt-4 space-y-6">
-              {/* Información del Cliente */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold border-b pb-2">Información del Cliente</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p><span className="font-medium">Nombre:</span> {getClientName(currentViewingPlan.clientId)}</p>
-                    <p><span className="font-medium">Estado del Plan:</span> 
-                      <Badge variant={currentViewingPlan.isActive ? "default" : "secondary"} className="ml-2">
-                        {currentViewingPlan.isActive ? "Activo" : "Inactivo"}
-                      </Badge>
-                    </p>
-                  </div>
-                  <div>
-                    <p><span className="font-medium">Fecha de inicio:</span> {format(new Date(currentViewingPlan.startDate), "dd/MM/yyyy")}</p>
-                    {currentViewingPlan.endDate && (
-                      <p><span className="font-medium">Fecha de fin:</span> {format(new Date(currentViewingPlan.endDate), "dd/MM/yyyy")}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Objetivos y Restricciones */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold border-b pb-2">Objetivos y Restricciones</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {currentViewingPlan.objectives && currentViewingPlan.objectives.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-1">Objetivos:</h4>
-                      <ul className="list-disc pl-5">
-                        {currentViewingPlan.objectives.map((obj, idx) => (
-                          <li key={idx}>{obj}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {currentViewingPlan.restrictions && currentViewingPlan.restrictions.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-1">Restricciones:</h4>
-                      <ul className="list-disc pl-5">
-                        {currentViewingPlan.restrictions.map((restriction, idx) => (
-                          <li key={idx}>{restriction}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Objetivos Nutricionales */}
-              {currentViewingPlan.nutrientGoals && (
+            <div className="print-plan-content no-print:hidden">
+              <div className="mt-4 space-y-6">
+                {/* Información del Cliente */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-bold border-b pb-2">Objetivos Nutricionales Diarios</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    {currentViewingPlan.nutrientGoals.calories && (
-                      <div className="bg-muted p-3 rounded-lg">
-                        <p className="font-semibold">Calorías</p>
-                        <p>{currentViewingPlan.nutrientGoals.calories} kcal</p>
-                      </div>
-                    )}
-                    {currentViewingPlan.nutrientGoals.protein && (
-                      <div className="bg-muted p-3 rounded-lg">
-                        <p className="font-semibold">Proteínas</p>
-                        <p>{currentViewingPlan.nutrientGoals.protein} g</p>
-                      </div>
-                    )}
-                    {currentViewingPlan.nutrientGoals.carbs && (
-                      <div className="bg-muted p-3 rounded-lg">
-                        <p className="font-semibold">Carbohidratos</p>
-                        <p>{currentViewingPlan.nutrientGoals.carbs} g</p>
-                      </div>
-                    )}
-                    {currentViewingPlan.nutrientGoals.fat && (
-                      <div className="bg-muted p-3 rounded-lg">
-                        <p className="font-semibold">Grasas</p>
-                        <p>{currentViewingPlan.nutrientGoals.fat} g</p>
-                      </div>
-                    )}
+                  <h3 className="text-lg font-bold border-b pb-2">Información del Cliente</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p><span className="font-medium">Nombre:</span> {getClientName(currentViewingPlan.clientId)}</p>
+                      <p><span className="font-medium">Estado del Plan:</span> 
+                        <Badge variant={currentViewingPlan.isActive ? "default" : "secondary"} className="ml-2">
+                          {currentViewingPlan.isActive ? "Activo" : "Inactivo"}
+                        </Badge>
+                      </p>
+                    </div>
+                    <div>
+                      <p><span className="font-medium">Fecha de inicio:</span> {format(new Date(currentViewingPlan.startDate), "dd/MM/yyyy")}</p>
+                      {currentViewingPlan.endDate && (
+                        <p><span className="font-medium">Fecha de fin:</span> {format(new Date(currentViewingPlan.endDate), "dd/MM/yyyy")}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Hidratación */}
-              {currentViewingPlan.hydration && (
+                {/* Objetivos y Restricciones */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-bold border-b pb-2">Hidratación</h3>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="font-semibold">Recomendación diaria de agua</p>
-                    <p>{(currentViewingPlan.hydration.daily_goal / 1000).toFixed(1)} litros</p>
-                    {currentViewingPlan.hydration.reminders && currentViewingPlan.hydration.reminders.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Recordatorios:</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {currentViewingPlan.hydration.reminders.map((time, index) => (
-                            <Badge key={index} variant="outline" className="text-sm">
-                              {time}
-                            </Badge>
+                  <h3 className="text-lg font-bold border-b pb-2">Objetivos y Restricciones</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {currentViewingPlan.objectives && currentViewingPlan.objectives.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-1">Objetivos:</h4>
+                        <ul className="list-disc pl-5">
+                          {currentViewingPlan.objectives.map((obj, idx) => (
+                            <li key={idx}>{obj}</li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     )}
-                    {currentViewingPlan.hydration.notes && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Notas:</p>
-                        <p className="text-sm text-muted-foreground">{currentViewingPlan.hydration.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Suplementos */}
-              {currentViewingPlan?.supplements && Object.keys(currentViewingPlan.supplements).length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold border-b pb-2">Suplementos Recomendados</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(currentViewingPlan.supplements).map(([supplementId, supplementData]) => {
-                      const supplement = supplements.find(s => s.id === supplementId);
-                      return (
-                        <Card key={supplementId} className="overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              {supplement?.image_url && (
-                                <div className="flex-shrink-0">
-                                  <img
-                                    src={supplement.image_url}
-                                    alt={supplement.name}
-                                    className="w-20 h-20 object-cover rounded-lg"
-                                  />
-                                </div>
-                              )}
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-lg">{supplement?.name || 'Suplemento no encontrado'}</h4>
-                                <div className="mt-2 space-y-1">
-                                  <p className="text-sm">
-                                    <span className="font-medium">Dosis:</span> {supplementData.dose}
-                                  </p>
-                                  {supplementData.time && (
-                                    <p className="text-sm text-muted-foreground">
-                                      <span className="font-medium">Horario:</span> {supplementData.time}
-                                    </p>
-                                  )}
-                                  {supplement?.description && (
-                                    <p className="text-sm text-muted-foreground">
-                                      <span className="font-medium">Descripción:</span> {supplement.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Plan de Comidas */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold border-b pb-2">Plan de Comidas</h3>
-                {currentViewingPlan.dailyPlans.map((dayPlan, dayIndex) => (
-                  <div key={dayIndex} className="border rounded-lg p-4 mb-4">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                      <h4 className="font-semibold text-lg mb-2 md:mb-0">Día {dayIndex + 1}</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
-                        <div className="bg-muted p-2 rounded-lg">
-                          <span className="font-medium block">Calorías</span>
-                          <span className="text-sm">{calculateDayTotal(dayPlan, 'calories')} kcal</span>
-                        </div>
-                        <div className="bg-muted p-2 rounded-lg">
-                          <span className="font-medium block">Proteínas</span>
-                          <span className="text-sm">{calculateDayTotal(dayPlan, 'protein')} g</span>
-                        </div>
-                        <div className="bg-muted p-2 rounded-lg">
-                          <span className="font-medium block">Carbos</span>
-                          <span className="text-sm">{calculateDayTotal(dayPlan, 'carbs')} g</span>
-                        </div>
-                        <div className="bg-muted p-2 rounded-lg">
-                          <span className="font-medium block">Grasas</span>
-                          <span className="text-sm">{calculateDayTotal(dayPlan, 'fat')} g</span>
-                        </div>
-                      </div>
-                    </div>
                     
-                    <div className="space-y-4">
-                      {dayPlan.meals?.map((meal, mealIndex) => {
-                        const mealDetails = getMealDetails(meal.meal_id || '');
-                        if (!mealDetails) return null;
-                        
+                    {currentViewingPlan.restrictions && currentViewingPlan.restrictions.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-1">Restricciones:</h4>
+                        <ul className="list-disc pl-5">
+                          {currentViewingPlan.restrictions.map((restriction, idx) => (
+                            <li key={idx}>{restriction}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Objetivos Nutricionales */}
+                {currentViewingPlan.nutrientGoals && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold border-b pb-2">Objetivos Nutricionales Diarios</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                      {currentViewingPlan.nutrientGoals.calories && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <p className="font-semibold">Calorías</p>
+                          <p>{currentViewingPlan.nutrientGoals.calories} kcal</p>
+                        </div>
+                      )}
+                      {currentViewingPlan.nutrientGoals.protein && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <p className="font-semibold">Proteínas</p>
+                          <p>{currentViewingPlan.nutrientGoals.protein} g</p>
+                        </div>
+                      )}
+                      {currentViewingPlan.nutrientGoals.carbs && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <p className="font-semibold">Carbohidratos</p>
+                          <p>{currentViewingPlan.nutrientGoals.carbs} g</p>
+                        </div>
+                      )}
+                      {currentViewingPlan.nutrientGoals.fat && (
+                        <div className="bg-muted p-3 rounded-lg">
+                          <p className="font-semibold">Grasas</p>
+                          <p>{currentViewingPlan.nutrientGoals.fat} g</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hidratación */}
+                {currentViewingPlan.hydration && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold border-b pb-2">Hidratación</h3>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="font-semibold">Recomendación diaria de agua</p>
+                      <p>{(currentViewingPlan.hydration.daily_goal / 1000).toFixed(1)} litros</p>
+                      {currentViewingPlan.hydration.reminders && currentViewingPlan.hydration.reminders.length > 0 && (
+                        <div className="mt-2">
+                          <p className="font-semibold">Recordatorios:</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {currentViewingPlan.hydration.reminders.map((time, index) => (
+                              <Badge key={index} variant="outline" className="text-sm">
+                                {time}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {currentViewingPlan.hydration.notes && (
+                        <div className="mt-2">
+                          <p className="font-semibold">Notas:</p>
+                          <p className="text-sm text-muted-foreground">{currentViewingPlan.hydration.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Suplementos */}
+                {currentViewingPlan?.supplements && Object.keys(currentViewingPlan.supplements).length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold border-b pb-2">Suplementos Recomendados</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(currentViewingPlan.supplements).map(([supplementId, supplementData]) => {
+                        const supplement = supplements.find(s => s.id === supplementId);
                         return (
-                          <Card key={mealIndex} className="mb-4">
-                            <CardHeader>
-                              <CardTitle>{mealDetails.type || `Comida ${mealIndex + 1}`}</CardTitle>
-                              <CardDescription>{mealDetails.time || 'Sin hora especificada'}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="grid gap-4">
-                                {mealDetails.foods?.map((food, foodIndex) => {
-                                  const foodData = foods.find(f => f.id === food.food_id);
-                                  console.log('Datos del alimento:', {
-                                    food,
-                                    foodId: food.food_id,
-                                    name: foodData?.name,
-                                    quantity: food.quantity,
-                                    unit: food.unit,
-                                    calories: food.calories,
-                                    image: foodData?.image_url
-                                  });
-                                  return (
-                                    <div key={foodIndex} className="flex items-center gap-2">
-                                      <Avatar className="h-8 w-8">
-                                        <AvatarImage src={foodData?.image_url} alt={foodData?.name || 'Alimento'} />
-                                        <AvatarFallback>{foodData?.name?.charAt(0) || 'A'}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <p className="font-medium">{foodData?.name || 'Alimento'}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                          {food.quantity ? `${food.quantity} ${food.unit}` : foodData?.servingUnit} - {food.calories} kcal
-                                        </p>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                                {mealDetails.instructions && (
-                                  <div>
-                                    <h4 className="font-medium mb-2">Instrucciones de preparación</h4>
-                                    <p className="text-sm text-muted-foreground">{mealDetails.instructions}</p>
+                          <Card key={supplementId} className="overflow-hidden">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-4">
+                                {supplement?.image_url && (
+                                  <div className="flex-shrink-0">
+                                    <img
+                                      src={supplement.image_url}
+                                      alt={supplement.name}
+                                      className="w-20 h-20 object-cover rounded-lg"
+                                    />
                                   </div>
                                 )}
-                                {mealDetails.notes && (
-                                  <div>
-                                    <h4 className="font-medium mb-2">Notas</h4>
-                                    <p className="text-sm text-muted-foreground">{mealDetails.notes}</p>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-lg">{supplement?.name || 'Suplemento no encontrado'}</h4>
+                                  <div className="mt-2 space-y-1">
+                                    <p className="text-sm">
+                                      <span className="font-medium">Dosis:</span> {supplementData.dose}
+                                    </p>
+                                    {supplementData.time && (
+                                      <p className="text-sm text-muted-foreground">
+                                        <span className="font-medium">Horario:</span> {supplementData.time}
+                                      </p>
+                                    )}
+                                    {supplement?.description && (
+                                      <p className="text-sm text-muted-foreground">
+                                        <span className="font-medium">Descripción:</span> {supplement.description}
+                                      </p>
+                                    )}
                                   </div>
-                                )}
-                                {mealDetails.images && mealDetails.images.length > 0 && (
-                                  <div>
-                                    <h4 className="font-medium mb-2">Fotos</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                      {mealDetails.images.map((image, imageIndex) => (
-                                        <img
-                                          key={imageIndex}
-                                          src={image}
-                                          alt={`Foto ${imageIndex + 1} de ${mealDetails.type || 'comida'}`}
-                                          className="rounded-lg object-cover h-32 w-full"
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -815,33 +599,362 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
                       })}
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
 
-              {/* Notas Adicionales */}
-              {currentViewingPlan.additionalNotes && (
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold border-b pb-2">Notas Adicionales</h3>
-                  <p className="text-sm text-muted-foreground">{currentViewingPlan.additionalNotes}</p>
+                {/* Plan de Comidas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold border-b pb-2">Plan de Comidas</h3>
+                  {currentViewingPlan.dailyPlans.map((dayPlan, dayIndex) => (
+                    <div key={dayIndex} className="border rounded-lg p-4 mb-4">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                        <h4 className="font-semibold text-lg mb-2 md:mb-0">Día {dayIndex + 1}</h4>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {dayPlan.meals?.map((meal, mealIndex) => {
+                          const mealDetails = getMealDetails(meal.meal_id || '');
+                          if (!mealDetails) return null;
+                          
+                          return (
+                            <Card key={mealIndex} className="mb-4">
+                              <CardHeader>
+                                <CardTitle>{traducirTipoComida(mealDetails.type) || `Comida ${mealIndex + 1}`}</CardTitle>
+                                <CardDescription>{obtenerHoraPorDefecto(mealDetails.type, mealDetails.time)}</CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="grid gap-4">
+                                  {mealDetails.foods?.filter(food => {
+                                    const foodData = foods.find(f => f.id === food.food_id);
+                                    return !!foodData;
+                                  }).map((food, foodIndex) => {
+                                    const foodData = foods.find(f => f.id === food.food_id);
+                                    return (
+                                      <div key={foodIndex} className="flex justify-between items-center gap-4 mb-4">
+                                        <div>
+                                          <p className="text-lg font-semibold">{foodData?.name || 'Alimento'}</p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {food.quantity ? `${food.quantity} ${food.unit}` : foodData?.servingUnit}
+                                          </p>
+                                        </div>
+                                        {foodData?.image_url && (
+                                          <img
+                                            src={foodData.image_url}
+                                            alt={foodData.name || 'Alimento'}
+                                            className="w-64 h-40 object-cover rounded-lg flex-shrink-0"
+                                          />
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                  {mealDetails.instructions && (
+                                    <div>
+                                      <h4 className="font-medium mb-2">Instrucciones de preparación</h4>
+                                      <p className="text-sm text-muted-foreground">{mealDetails.instructions}</p>
+                                    </div>
+                                  )}
+                                  {mealDetails.notes && (
+                                    <div>
+                                      <h4 className="font-medium mb-2">Notas</h4>
+                                      <p className="text-sm text-muted-foreground">{mealDetails.notes}</p>
+                                    </div>
+                                  )}
+                                  {mealDetails.images && mealDetails.images.length > 0 && (
+                                    <div>
+                                      <h4 className="font-medium mb-2">Fotos</h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {mealDetails.images.map((image, imageIndex) => (
+                                          <img
+                                            key={imageIndex}
+                                            src={image}
+                                            alt={`Foto ${imageIndex + 1} de ${mealDetails.type || 'comida'}`}
+                                            className="rounded-lg object-cover aspect-square w-full h-64"
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+
+                {/* Notas Adicionales */}
+                {currentViewingPlan.additionalNotes && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold border-b pb-2">Notas Adicionales</h3>
+                    <p className="text-sm text-muted-foreground">{currentViewingPlan.additionalNotes}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-          
-          <DialogFooter>
+          <div className="flex justify-center mt-8 no-print">
             <Button 
-              onClick={() => {
-                if (currentViewingPlan) {
-                  handleExportPlanToPDF(currentViewingPlan.id);
-                }
-              }}
-              disabled={isLoading}
+              onClick={() => window.print()}
+              size="lg"
             >
-              {isLoading ? "Generando PDF..." : "Exportar a PDF"}
+              Imprimir / Exportar PDF
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* Renderizado oculto para impresión del plan detallado, fuera del modal */}
+      {currentViewingPlan && (
+        <div className="print-plan-content hidden print:block">
+          <div className="mt-4 space-y-6">
+            {/* Información del Cliente */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold border-b pb-2">Información del Cliente</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p><span className="font-medium">Nombre:</span> {getClientName(currentViewingPlan.clientId)}</p>
+                  <p><span className="font-medium">Estado del Plan:</span> 
+                    <Badge variant={currentViewingPlan.isActive ? "default" : "secondary"} className="ml-2">
+                      {currentViewingPlan.isActive ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <p><span className="font-medium">Fecha de inicio:</span> {format(new Date(currentViewingPlan.startDate), "dd/MM/yyyy")}</p>
+                  {currentViewingPlan.endDate && (
+                    <p><span className="font-medium">Fecha de fin:</span> {format(new Date(currentViewingPlan.endDate), "dd/MM/yyyy")}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Objetivos y Restricciones */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold border-b pb-2">Objetivos y Restricciones</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {currentViewingPlan.objectives && currentViewingPlan.objectives.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Objetivos:</h4>
+                    <ul className="list-disc pl-5">
+                      {currentViewingPlan.objectives.map((obj, idx) => (
+                        <li key={idx}>{obj}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {currentViewingPlan.restrictions && currentViewingPlan.restrictions.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Restricciones:</h4>
+                    <ul className="list-disc pl-5">
+                      {currentViewingPlan.restrictions.map((restriction, idx) => (
+                        <li key={idx}>{restriction}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Objetivos Nutricionales */}
+            {currentViewingPlan.nutrientGoals && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold border-b pb-2">Objetivos Nutricionales Diarios</h3>
+                <div className="grid grid-cols-4 gap-4">
+                  {currentViewingPlan.nutrientGoals.calories && (
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="font-semibold">Calorías</p>
+                      <p>{currentViewingPlan.nutrientGoals.calories} kcal</p>
+                    </div>
+                  )}
+                  {currentViewingPlan.nutrientGoals.protein && (
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="font-semibold">Proteínas</p>
+                      <p>{currentViewingPlan.nutrientGoals.protein} g</p>
+                    </div>
+                  )}
+                  {currentViewingPlan.nutrientGoals.carbs && (
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="font-semibold">Carbohidratos</p>
+                      <p>{currentViewingPlan.nutrientGoals.carbs} g</p>
+                    </div>
+                  )}
+                  {currentViewingPlan.nutrientGoals.fat && (
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="font-semibold">Grasas</p>
+                      <p>{currentViewingPlan.nutrientGoals.fat} g</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Hidratación */}
+            {currentViewingPlan.hydration && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold border-b pb-2">Hidratación</h3>
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="font-semibold">Recomendación diaria de agua</p>
+                  <p>{(currentViewingPlan.hydration.daily_goal / 1000).toFixed(1)} litros</p>
+                  {currentViewingPlan.hydration.reminders && currentViewingPlan.hydration.reminders.length > 0 && (
+                    <div className="mt-2">
+                      <p className="font-semibold">Recordatorios:</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {currentViewingPlan.hydration.reminders.map((time, index) => (
+                          <Badge key={index} variant="outline" className="text-sm">
+                            {time}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {currentViewingPlan.hydration.notes && (
+                    <div className="mt-2">
+                      <p className="font-semibold">Notas:</p>
+                      <p className="text-sm text-muted-foreground">{currentViewingPlan.hydration.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Suplementos */}
+            {currentViewingPlan?.supplements && Object.keys(currentViewingPlan.supplements).length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold border-b pb-2">Suplementos Recomendados</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(currentViewingPlan.supplements).map(([supplementId, supplementData]) => {
+                    const supplement = supplements.find(s => s.id === supplementId);
+                    return (
+                      <Card key={supplementId} className="overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            {supplement?.image_url && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={supplement.image_url}
+                                  alt={supplement.name}
+                                  className="w-20 h-20 object-cover rounded-lg"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg">{supplement?.name || 'Suplemento no encontrado'}</h4>
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm">
+                                  <span className="font-medium">Dosis:</span> {supplementData.dose}
+                                </p>
+                                {supplementData.time && (
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">Horario:</span> {supplementData.time}
+                                  </p>
+                                )}
+                                {supplement?.description && (
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">Descripción:</span> {supplement.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Plan de Comidas */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold border-b pb-2">Plan de Comidas</h3>
+              {currentViewingPlan.dailyPlans.map((dayPlan, dayIndex) => (
+                <div key={dayIndex} className="border rounded-lg p-4 mb-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                    <h4 className="font-semibold text-lg mb-2 md:mb-0">Día {dayIndex + 1}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    {dayPlan.meals?.map((meal, mealIndex) => {
+                      const mealDetails = getMealDetails(meal.meal_id || '');
+                      if (!mealDetails) return null;
+                      return (
+                        <Card key={mealIndex} className="mb-4">
+                          <CardHeader>
+                            <CardTitle>{traducirTipoComida(mealDetails.type) || `Comida ${mealIndex + 1}`}</CardTitle>
+                            <CardDescription>{obtenerHoraPorDefecto(mealDetails.type, mealDetails.time)}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid gap-4">
+                              {mealDetails.foods?.filter(food => {
+                                const foodData = foods.find(f => f.id === food.food_id);
+                                return !!foodData;
+                              }).map((food, foodIndex) => {
+                                const foodData = foods.find(f => f.id === food.food_id);
+                                return (
+                                  <div key={foodIndex} className="flex justify-between items-center gap-4 mb-4">
+                                    <div>
+                                      <p className="text-lg font-semibold">{foodData?.name || 'Alimento'}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {food.quantity ? `${food.quantity} ${food.unit}` : foodData?.servingUnit}
+                                      </p>
+                                    </div>
+                                    {foodData?.image_url && (
+                                      <img
+                                        src={foodData.image_url}
+                                        alt={foodData.name || 'Alimento'}
+                                        className="w-64 h-40 object-cover rounded-lg flex-shrink-0"
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {mealDetails.instructions && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Instrucciones de preparación</h4>
+                                  <p className="text-sm text-muted-foreground">{mealDetails.instructions}</p>
+                                </div>
+                              )}
+                              {mealDetails.notes && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Notas</h4>
+                                  <p className="text-sm text-muted-foreground">{mealDetails.notes}</p>
+                                </div>
+                              )}
+                              {mealDetails.images && mealDetails.images.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Fotos</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {mealDetails.images.map((image, imageIndex) => (
+                                      <img
+                                        key={imageIndex}
+                                        src={image}
+                                        alt={`Foto ${imageIndex + 1} de ${mealDetails.type || 'comida'}`}
+                                        className="rounded-lg object-cover aspect-square w-full h-64"
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Notas Adicionales */}
+            {currentViewingPlan.additionalNotes && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold border-b pb-2">Notas Adicionales</h3>
+                <p className="text-sm text-muted-foreground">{currentViewingPlan.additionalNotes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
@@ -900,7 +1013,7 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleViewPlan(plan.id)}
+                  onClick={() => navigate(`/planes-nutricionales/${plan.id}`)}
                 >
                   <Eye size={16} className="mr-1" /> Ver Plan
                 </Button>
@@ -915,6 +1028,16 @@ const NutritionPlanList = ({ plans, onDelete }: NutritionPlanListProps) => {
             </Card>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-center mt-8">
+        <Button 
+          className="no-print"
+          onClick={() => window.print()}
+          size="lg"
+        >
+          Imprimir / Exportar PDF
+        </Button>
       </div>
     </div>
   );

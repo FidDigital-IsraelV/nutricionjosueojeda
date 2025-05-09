@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -41,6 +40,7 @@ import ReportesPage from "./pages/reportes/ReportesPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotificacionesPage from "./pages/notificaciones/NotificacionesPage";
 import MyPlanPage from "./pages/my-plan/MyPlanPage";
+import PlanNutricionalDetallePage from "./pages/planes-nutricionales/PlanNutricionalDetallePage";
 
 function App() {
   return (
@@ -65,7 +65,7 @@ function App() {
                   <Route path="guias" element={<GuiasPage />} />
                   <Route path="comidas" element={<ComidasPage />} />
                   <Route path="planes-nutricionales" element={<PlanesNutricionalesPage />} />
-                  <Route path="planes-nutricionales/:planId" element={<PlanesNutricionalesPage />} />
+                  <Route path="planes-nutricionales/:id" element={<PlanNutricionalDetallePage />} />
                   <Route path="planes-nutricionales/editar/:planId" element={<PlanesNutricionalesPage />} />
                   <Route path="seguimiento-nutricional" element={<SeguimientoNutricionalPage />} />
                   <Route path="suplementos" element={<SuplementosPage />} />

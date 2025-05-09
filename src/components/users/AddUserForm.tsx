@@ -109,94 +109,94 @@ export const AddUserForm = ({ onClose }: AddUserFormProps) => {
       if (authError) throw authError;
       if (!authData.user) throw new Error('No se pudo crear el usuario en Auth');
 
-      // 2. Crear el perfil en la tabla profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-          membership_start_date: data.membershipStartDate || null,
-          membership_end_date: data.membershipEndDate || null
-        })
-        .select()
-        .single();
+        // 2. Crear el perfil en la tabla profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: data.email,
+            name: data.name,
+            role: data.role,
+            membership_start_date: data.membershipStartDate || null,
+            membership_end_date: data.membershipEndDate || null
+          })
+          .select()
+          .single();
 
-      if (profileError) {
-        console.error('Error al crear perfil:', profileError);
-        throw profileError;
-      }
+        if (profileError) {
+          console.error('Error al crear perfil:', profileError);
+          throw profileError;
+        }
 
       if (!profileData) {
         throw new Error('No se pudo crear el perfil del usuario');
       }
 
-      // 3. Crear el registro específico según el rol
+        // 3. Crear el registro específico según el rol
       if (data.role === 'client') {
-        // Convertir strings a arrays para los campos que lo requieren
-        const medicalConditions = data.medicalConditions 
-          ? data.medicalConditions.split(',').map(item => item.trim())
-          : [];
-        
-        const allergies = data.allergies 
-          ? data.allergies.split(',').map(item => item.trim())
-          : [];
-        
-        const medications = data.medications 
-          ? data.medications.split(',').map(item => item.trim())
-          : [];
-        
-        const dietaryRestrictions = data.dietaryRestrictions 
-          ? data.dietaryRestrictions.split(',').map(item => item.trim())
-          : [];
+          // Convertir strings a arrays para los campos que lo requieren
+          const medicalConditions = data.medicalConditions 
+            ? data.medicalConditions.split(',').map(item => item.trim())
+            : [];
+          
+          const allergies = data.allergies 
+            ? data.allergies.split(',').map(item => item.trim())
+            : [];
+          
+          const medications = data.medications 
+            ? data.medications.split(',').map(item => item.trim())
+            : [];
+          
+          const dietaryRestrictions = data.dietaryRestrictions 
+            ? data.dietaryRestrictions.split(',').map(item => item.trim())
+            : [];
 
         // Intentar crear el cliente
-        const { error: clientError } = await supabase
-          .from('clients')
-          .insert({
-            profile_id: authData.user.id,
-            phone: data.phone || null,
-            address: data.address || null,
-            birth_date: data.birthDate || null,
-            gender: data.gender || null,
-            height: data.height || null,
-            weight: data.weight || null,
-            activity_level: data.activityLevel || null,
-            medical_conditions: medicalConditions,
-            allergies: allergies,
-            medications: medications,
-            dietary_restrictions: dietaryRestrictions,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+          const { error: clientError } = await supabase
+            .from('clients')
+            .insert({
+              profile_id: authData.user.id,
+              phone: data.phone || null,
+              address: data.address || null,
+              birth_date: data.birthDate || null,
+              gender: data.gender || null,
+              height: data.height || null,
+              weight: data.weight || null,
+              activity_level: data.activityLevel || null,
+              medical_conditions: medicalConditions,
+              allergies: allergies,
+              medications: medications,
+              dietary_restrictions: dietaryRestrictions,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
 
-        if (clientError) {
-          console.error('Error al crear cliente:', clientError);
+          if (clientError) {
+            console.error('Error al crear cliente:', clientError);
           // Intentar limpiar el perfil si falla la creación del cliente
           await supabase.from('profiles').delete().eq('id', authData.user.id);
-          throw clientError;
-        }
+            throw clientError;
+          }
 
-        // Verificación después de crear el cliente
-        const { data: verifyClient, error: verifyError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('profile_id', authData.user.id)
-          .single();
+          // Verificación después de crear el cliente
+          const { data: verifyClient, error: verifyError } = await supabase
+            .from('clients')
+            .select('*')
+            .eq('profile_id', authData.user.id)
+            .single();
 
-        if (verifyError || !verifyClient) {
-          console.error('Error al verificar la creación del cliente:', verifyError);
+          if (verifyError || !verifyClient) {
+            console.error('Error al verificar la creación del cliente:', verifyError);
           // Intentar limpiar el perfil si falla la verificación
           await supabase.from('profiles').delete().eq('id', authData.user.id);
-          throw new Error('No se pudo verificar la creación del cliente');
+            throw new Error('No se pudo verificar la creación del cliente');
+          }
         }
-      }
 
-      toast.success("Usuario creado con éxito", {
-        description: `${data.name} ha sido agregado como ${data.role}`,
-      });
-      onClose();
+        toast.success("Usuario creado con éxito", {
+          description: `${data.name} ha sido agregado como ${data.role}`,
+        });
+        onClose();
     } catch (error) {
       console.error("Error al crear usuario:", error);
       toast.error("Error al crear usuario", {

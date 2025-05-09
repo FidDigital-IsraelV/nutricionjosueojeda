@@ -14,15 +14,15 @@ const ReportePlanes: React.FC<ReportePlanesProps> = ({ month, year }) => {
   const { data, loading, error } = useReports(month, year);
 
   if (loading) {
-    return (
+      return (
       <div className="text-center py-4">
         <p>Cargando datos de planes...</p>
       </div>
-    );
+      );
   }
 
   if (error) {
-    return (
+      return (
       <div className="text-center py-4 text-red-500">
         <p>Error al cargar los datos: {error}</p>
       </div>
@@ -44,7 +44,7 @@ const ReportePlanes: React.FC<ReportePlanesProps> = ({ month, year }) => {
             </p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Planes de Nutrición</CardTitle>
@@ -57,7 +57,7 @@ const ReportePlanes: React.FC<ReportePlanesProps> = ({ month, year }) => {
             </p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tasa de Completitud</CardTitle>
@@ -73,7 +73,7 @@ const ReportePlanes: React.FC<ReportePlanesProps> = ({ month, year }) => {
           </CardContent>
         </Card>
       </div>
-
+      
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -101,7 +101,7 @@ const ReportePlanes: React.FC<ReportePlanesProps> = ({ month, year }) => {
             </ChartContainer>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
             <CardTitle>Planes por Estado</CardTitle>
